@@ -1,3 +1,5 @@
+const path = require("path");
+
 module.exports = {
   mode: "production",
   entry: "./src/index.ts",
@@ -16,6 +18,11 @@ module.exports = {
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],
+  },
+  devServer: {
+    static: ["public", "dist"],
+    port: 9000,
+    allowedHosts: "all",
   },
   output: {
     filename: "image-editor.js",
