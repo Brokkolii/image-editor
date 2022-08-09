@@ -70,8 +70,8 @@ export default class ImageEditor {
 
   translateCoordinates(x, y) {
     return {
-      x: x * this.state.zoom + this.state.offset.x + this.state.offset.x * this.state.zoom,
-      y: y * this.state.zoom + this.state.offset.y + this.state.offset.y * this.state.zoom,
+      x: x * this.state.zoom + this.state.offset.x,
+      y: y * this.state.zoom + this.state.offset.y,
     };
   }
 
@@ -82,10 +82,8 @@ export default class ImageEditor {
     const width = this.state.background.image.width * this.state.zoom;
     const height = this.state.background.image.height * this.state.zoom;
 
-    //const left = this.translateCoordinates(this.state.background.x);
-    //const top = this.translateCoordinates(this.state.background.y);
-    const left = 0;
-    const top = 0;
+    const left = this.state.offset.x;
+    const top = this.state.offset.y;
 
     this.context.drawImage(this.state.background.image, left, top, width, height);
 
