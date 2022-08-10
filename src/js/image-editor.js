@@ -2,40 +2,11 @@ export default class ImageEditor {
   constructor(element, imgSrc) {
     // Prepare Canvas
     this.parentEl = element;
-    this.parentEl.style.position = "relative";
-    this.canvas = document.createElement("canvas");
-    this.canvas.style.width = "100%";
-    this.canvas.style.heigt = "100%";
-    this.canvas.style.backgroundColor = "#f2f2f2";
-    this.canvas.style.borderRadius = "4px";
-    this.canvas.style.border = "1px solid #d3d3d3";
-    this.parentEl.appendChild(this.canvas);
-    this.context = this.canvas.getContext("2d");
-
-    let canvasPos = this.canvas.getBoundingClientRect();
-    this.canvas.height = canvasPos.height;
-    this.canvas.width = canvasPos.width;
-    this.left = canvasPos.left;
-    this.top = canvasPos.top;
-
-    this.state = {
-      moveMode: "full",
-      zoom: 1,
-      offset: {
-        x: this.canvas.width / 2,
-        y: this.canvas.hieght / 2,
-      },
-      paths: [],
-      background: {
-        image: new Image(),
-        x: 0,
-        y: 0,
-      },
-    };
+    this.parentEl.classList.add("image-editor_container");
 
     this.tools = {
       move: {
-        active: true,
+        active: false,
         moving: false,
         lastDraw: new Date(),
         mouseDown: {
@@ -44,7 +15,7 @@ export default class ImageEditor {
         },
       },
       draw: {
-        active: false,
+        active: true,
         moving: false,
         lineWidth: 2,
         color: "red",
@@ -56,6 +27,48 @@ export default class ImageEditor {
       },
     };
 
+    this.canvas = {
+      el: document.createElement("canvas"),
+      ctx: null,
+      x: 0,
+      y: 0,
+      w: 0,
+      h: 0,
+      content: {
+        paths: [],
+        background: {
+          image: new Image(),
+          x: 0,
+          y: 0,
+          w: 0,
+          h: 0,
+        },
+      },
+    };
+
+    this.view = {
+      zoom: 1,
+      offset: {
+        x: this.canvas.w / 2,
+        y: this.canvas.h / 2,
+      },
+    };
+
+    this.canvas.el.classList.add("image-editor_canvas");
+
+    this.parentEl.appendChild(this.canvas.el);
+    this.canvas.ctx = this.canvas.el.getContext("2d");
+
+    let canvasPos = this.canvas.el.getBoundingClientRect();
+    this.canvas.el.height = canvasPos.height;
+    this.canvas.el.width = canvasPos.width;
+
+    this.canvas.x = canvasPos.left;
+    this.canvas.y = canvasPos.top;
+    this.canvas.w = canvasPos.width;
+    this.canvas.h = canvasPos.height;
+    // TODO: set on window resize
+
     if (imgSrc) this.loadBackgroundImage(imgSrc);
 
     this.setControls();
@@ -64,83 +77,81 @@ export default class ImageEditor {
   }
 
   loadBackgroundImage(imgSrc) {
-    this.state.background.image.src = imgSrc;
-    this.state.background.x = 0 - this.state.background.image.width / 2;
-    this.state.background.y = 0 - this.state.background.image.height / 2;
-    this.state.background.image.style.display = "none";
-    this.parentEl.appendChild(this.state.background.image);
+    let bg = this.canvas.content.background;
+    bg.image.src = imgSrc;
+    bg.w = bg.image.width;
+    bg.h = bg.image.height;
+    bg.x = 0 - bg.w / 2;
+    bg.y = 0 - bg.h / 2;
     this.setFullSize();
-    this.state.background.image.onload = () => {
+    bg.image.onload = () => {
       this.draw();
     };
   }
 
   mapCoordsToOrigin(x, y, w, h) {
     return {
-      x: (x - this.state.offset.x) / this.state.zoom,
-      y: (y - this.state.offset.y) / this.state.zoom,
-      w: w / this.state.zoom,
-      h: h / this.state.zoom,
+      x: (x - this.view.offset.x) / this.view.zoom,
+      y: (y - this.view.offset.y) / this.view.zoom,
+      w: w / this.view.zoom,
+      h: h / this.view.zoom,
     };
   }
 
   mapCoordsToDisplay(x, y, w, h) {
     return {
-      x: x * this.state.zoom + this.state.offset.x,
-      y: y * this.state.zoom + this.state.offset.y,
-      w: w * this.state.zoom,
-      h: h * this.state.zoom,
+      x: x * this.view.zoom + this.view.offset.x,
+      y: y * this.view.zoom + this.view.offset.y,
+      w: w * this.view.zoom,
+      h: h * this.view.zoom,
     };
   }
 
   draw() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.canvas.ctx.clearRect(0, 0, this.canvas.w, this.canvas.h);
 
     //  Image
-    const bg = this.state.background;
-    const displayPos = this.mapCoordsToDisplay(bg.x, bg.y, bg.image.width, bg.image.height);
-    this.context.drawImage(bg.image, displayPos.x, displayPos.y, displayPos.w, displayPos.h);
+    const bg = this.canvas.content.background;
+    const displayPos = this.mapCoordsToDisplay(bg.x, bg.y, bg.w, bg.h);
+    this.canvas.ctx.drawImage(bg.image, displayPos.x, displayPos.y, displayPos.w, displayPos.h);
 
     // Paths
-    for (let i in this.state.paths) {
-      this.context.strokeStyle = this.tools.draw.color;
-      this.context.lineWidth = this.tools.draw.lineWidth * this.state.zoom;
-      this.context.beginPath();
+    for (let i in this.canvas.content.paths) {
+      const path = this.canvas.content.paths[i];
+
+      this.canvas.ctx.strokeStyle = this.tools.draw.color;
+      this.canvas.ctx.lineWidth = this.tools.draw.lineWidth * this.view.zoom;
+      this.canvas.ctx.beginPath();
 
       let pointIndex = 0;
-      let point = this.state.paths[i][pointIndex];
+      let point = path[pointIndex];
 
       while (point) {
         const scaledPoint = this.mapCoordsToDisplay(point.x, point.y);
         if (pointIndex == 0) {
-          this.context.moveTo(scaledPoint.x, scaledPoint.y);
+          this.canvas.ctx.moveTo(scaledPoint.x, scaledPoint.y);
         } else {
-          this.context.lineTo(scaledPoint.x, scaledPoint.y);
+          this.canvas.ctx.lineTo(scaledPoint.x, scaledPoint.y);
         }
-        point = this.state.paths[i][++pointIndex];
+        point = path[++pointIndex];
       }
 
-      this.context.stroke();
+      this.canvas.ctx.stroke();
     }
 
     // Tools
-    let oldToolbox = this.parentEl.querySelector(".toolbox");
+    let oldToolbox = this.parentEl.querySelector(".image-editor_toolbox");
     if (oldToolbox) oldToolbox.remove();
-    let oldSettings = this.parentEl.querySelector(".setting");
+    let oldSettings = this.parentEl.querySelector(".image-editor_settings");
     if (oldSettings) oldSettings.remove();
 
     let toolbox = document.createElement("div");
-    toolbox.classList.add("toolbox");
-    toolbox.style.position = "absolute";
-    toolbox.style.top = "0px";
-    toolbox.style.left = "0px";
+    toolbox.classList.add("image-editor_toolbox");
 
     let moveTool = document.createElement("button");
     moveTool.innerText = "move";
     if (this.tools.move.active) {
-      moveTool.style.backgroundColor = "red";
-    } else {
-      moveTool.style.backgroundColor = "unset";
+      moveTool.classList.add("active");
     }
     moveTool.addEventListener("click", (e) => {
       this.tools.move.active = true;
@@ -152,9 +163,7 @@ export default class ImageEditor {
     let drawTool = document.createElement("button");
     drawTool.innerText = "draw";
     if (this.tools.draw.active) {
-      drawTool.style.backgroundColor = "red";
-    } else {
-      drawTool.style.backgroundColor = "unset";
+      drawTool.classList.add("active");
     }
     drawTool.addEventListener("click", (e) => {
       this.tools.move.active = false;
@@ -164,21 +173,13 @@ export default class ImageEditor {
     toolbox.appendChild(drawTool);
 
     let settings = document.createElement("div");
-    toolbox.classList.add("settings");
-    settings.style.position = "absolute";
-    settings.style.top = "0px";
-    settings.style.right = "0px";
+    settings.classList.add("image-editor_settings");
 
     let changeZoomMode = document.createElement("button");
     changeZoomMode.innerText = "zoom";
     changeZoomMode.addEventListener("click", (e) => {
-      if (this.state.moveMode == "custom" || this.state.moveMode == "normal") {
-        this.state.moveMode = "full";
-        this.setFullSize();
-      } else {
-        this.state.moveMode = "normal";
-        this.setNormalSize();
-      }
+      this.setFullSize();
+      this.draw();
     });
     settings.appendChild(changeZoomMode);
 
@@ -187,32 +188,24 @@ export default class ImageEditor {
   }
 
   setFullSize() {
-    const zoomHeight = (this.canvas.height - 20) / this.state.background.image.height;
-    const zoomWidth = (this.canvas.width - 20) / this.state.background.image.width;
-    this.state.zoom = Math.min(zoomHeight, zoomWidth);
-    this.state.offset.x = this.canvas.width / 2;
-    this.state.offset.y = this.canvas.height / 2;
-    this.draw();
-  }
-
-  setNormalSize() {
-    this.state.zoom = 1;
-    this.state.offset.x = this.canvas.width / 2;
-    this.state.offset.y = this.canvas.height / 2;
-    this.draw();
+    const zoomWidth = (this.canvas.w - 20) / this.canvas.content.background.w;
+    const zoomHeight = (this.canvas.h - 20) / this.canvas.content.background.h;
+    this.view.zoom = Math.min(zoomHeight, zoomWidth);
+    this.view.offset.x = this.canvas.w / 2;
+    this.view.offset.y = this.canvas.h / 2;
   }
 
   coordsOnBackground(x, y) {
     return (
-      x >= this.state.offset.x - (this.state.background.image.width * this.state.zoom) / 2 &&
-      x <= this.state.offset.x + (this.state.background.image.width * this.state.zoom) / 2 &&
-      y >= this.state.offset.y - (this.state.background.image.width * this.state.zoom) / 2 &&
-      y <= this.state.offset.y + (this.state.background.image.width * this.state.zoom) / 2
+      x >= this.view.offset.x - (this.canvas.content.background.w * this.view.zoom) / 2 &&
+      x <= this.view.offset.x + (this.canvas.content.background.w * this.view.zoom) / 2 &&
+      y >= this.view.offset.y - (this.canvas.content.background.h * this.view.zoom) / 2 &&
+      y <= this.view.offset.y + (this.canvas.content.background.h * this.view.zoom) / 2
     );
   }
 
   async getBlob() {
-    this.canvas.toBlob(
+    this.canvas.el.toBlob(
       (blob) => {
         blob.text().then((text) => {
           return text;
@@ -225,9 +218,8 @@ export default class ImageEditor {
 
   setControls() {
     this.parentEl.addEventListener("wheel", (e) => {
-      this.state.moveMode = "custom";
       const modifier = e.deltaY / 1000 + 1;
-      this.state.zoom = this.state.zoom * modifier;
+      this.view.zoom = this.view.zoom * modifier;
       this.draw();
     });
 
@@ -235,14 +227,14 @@ export default class ImageEditor {
       if (this.coordsOnBackground(e.x, e.y)) {
         if (this.tools.move.active) {
           this.tools.move.moving = true;
-          this.canvas.style.cursor = "grabbing";
+          this.canvas.el.style.cursor = "grabbing";
           this.tools.move.mouseDown.x = e.x;
           this.tools.move.mouseDown.y = e.y;
         }
 
         if (this.tools.draw.active) {
           this.tools.draw.moving = true;
-          this.state.paths.push([]);
+          this.canvas.content.paths.push([]);
         }
       }
     });
@@ -251,8 +243,7 @@ export default class ImageEditor {
       if (this.tools.move.active) {
         if (this.tools.move.moving) {
           this.tools.move.moving = false;
-          this.canvas.style.cursor = "auto";
-          this.state.moveMode = "custom";
+          this.canvas.el.style.cursor = "auto";
           this.draw();
         }
       }
@@ -273,15 +264,15 @@ export default class ImageEditor {
             const offsetY = e.y - this.tools.move.mouseDown.y;
             this.tools.move.mouseDown.x = e.x;
             this.tools.move.mouseDown.y = e.y;
-            this.state.offset.x += offsetX;
-            this.state.offset.y += offsetY;
+            this.view.offset.x += offsetX;
+            this.view.offset.y += offsetY;
             this.draw();
           }
         } else {
           if (this.coordsOnBackground(e.x, e.y)) {
-            this.canvas.style.cursor = "grab";
+            this.canvas.el.style.cursor = "grab";
           } else {
-            this.canvas.style.cursor = "auto";
+            this.canvas.el.style.cursor = "auto";
           }
         }
       }
@@ -291,8 +282,8 @@ export default class ImageEditor {
             if (new Date() - this.tools.draw.lastDraw >= 20) {
               this.tools.draw.lastDraw = new Date();
 
-              const originPos = this.mapCoordsToOrigin(e.x - this.left, e.y - this.top);
-              this.state.paths[this.state.paths.length - 1].push({ x: originPos.x, y: originPos.y });
+              const originPos = this.mapCoordsToOrigin(e.x - this.canvas.x, e.y - this.canvas.y);
+              this.canvas.content.paths[this.canvas.content.paths.length - 1].push({ x: originPos.x, y: originPos.y });
               this.draw();
             }
           } else {

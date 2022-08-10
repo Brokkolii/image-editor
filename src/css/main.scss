@@ -1,3 +1,33 @@
-.test {
-  color: red;
+.image-editor_container {
+  position: relative;
+}
+
+.image-editor_container .image-editor_canvas {
+  width: 100%;
+  height: 100%;
+  background-color: #f2f2f2;
+  border-radius: 4px;
+  border: 1px solid #d3d3d3;
+}
+
+.image-editor_container .image-editor_toolbox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 4px;
+}
+
+.image-editor_container button {
+  position: relative;
+}
+
+.image-editor_container button.active {
+  background-color: red;
+}
+
+.image-editor_container .image-editor_settings {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 4px;
 }
