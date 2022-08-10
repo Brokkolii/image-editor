@@ -1,6 +1,8 @@
 import Canvas from "./canvas";
 import Line from "./line";
 
+import icons from "./icons";
+
 export default class ImageEditor {
   constructor(element, imgSrc) {
     this.container = element;
@@ -62,8 +64,6 @@ export default class ImageEditor {
       draw: {
         active: true,
         moving: false,
-        lineWidth: 2,
-        color: "red",
         lastDraw: new Date(),
         mouseDown: {
           x: 0,
@@ -78,7 +78,7 @@ export default class ImageEditor {
           mousedown: function (scope, e) {
             if (scope.canvas.coordsOnBg(e.x, e.y)) {
               scope.tools.draw.moving = true;
-              scope.canvas.content.lines.push(new Line(scope.tools.draw.color, scope.tools.draw.lineWidth));
+              scope.canvas.content.lines.push(new Line(scope.settings.activeColor, scope.settings.activeWidth));
             }
           },
           mouseup: function (scope, e) {
@@ -106,6 +106,13 @@ export default class ImageEditor {
       },
     };
 
+    this.settings = {
+      activeColor: "red",
+      colors: ["red", "green", "blue", "black", "white"],
+      activeWidth: 4,
+      widths: [2, 4, 8, 16],
+    };
+
     if (imgSrc) this.canvas.loadBgImage(imgSrc);
 
     this.setControls();
@@ -114,55 +121,114 @@ export default class ImageEditor {
   }
 
   draw() {
-    // Tools
-    let oldToolbox = this.container.querySelector(".image-editor_toolbox");
-    if (oldToolbox) oldToolbox.remove();
-    let oldSettings = this.container.querySelector(".image-editor_settings");
-    if (oldSettings) oldSettings.remove();
+    //remove old ui
+    let scope = this;
+    let oldUi = this.container.querySelector(".image-editor_ui");
+    if (oldUi) oldUi.remove();
 
-    let toolbox = document.createElement("div");
-    toolbox.classList.add("image-editor_toolbox");
+    let ui = document.createElement("div");
+    ui.classList.add("image-editor_ui");
 
-    let moveTool = document.createElement("button");
-    moveTool.innerText = "move";
-    if (this.tools.move.active) {
-      moveTool.classList.add("active");
+    ui.appendChild(drawTools());
+    ui.appendChild(drawSettings());
+    ui.appendChild(drawUtil());
+
+    this.container.appendChild(ui);
+
+    function drawTools() {
+      let toolbox = document.createElement("div");
+      toolbox.classList.add("image-editor_toolbox");
+
+      let moveTool = document.createElement("button");
+      if (scope.tools.move.active) {
+        moveTool.classList.add("active");
+      }
+      moveTool.addEventListener("click", (e) => {
+        scope.tools.move.active = true;
+        scope.tools.draw.active = false;
+        scope.draw();
+      });
+      moveTool.appendChild(icons.move);
+      toolbox.appendChild(moveTool);
+
+      let drawTool = document.createElement("button");
+      if (scope.tools.draw.active) {
+        drawTool.classList.add("active");
+      }
+      drawTool.addEventListener("click", (e) => {
+        scope.tools.move.active = false;
+        scope.tools.draw.active = true;
+        scope.draw();
+      });
+      drawTool.appendChild(icons.draw);
+      toolbox.appendChild(drawTool);
+
+      return toolbox;
     }
-    moveTool.addEventListener("click", (e) => {
-      this.tools.move.active = true;
-      this.tools.draw.active = false;
-      this.draw();
-    });
-    toolbox.appendChild(moveTool);
 
-    let drawTool = document.createElement("button");
-    drawTool.innerText = "draw";
-    if (this.tools.draw.active) {
-      drawTool.classList.add("active");
+    function drawSettings() {
+      let settings = document.createElement("div");
+      settings.classList.add("image-editor_settings");
+
+      for (let i in scope.settings.colors) {
+        let colorButton = document.createElement("button");
+        if (scope.settings.colors[i] == scope.settings.activeColor) {
+          colorButton.classList.add("active");
+        }
+
+        colorButton.addEventListener("click", (e) => {
+          scope.settings.activeColor = scope.settings.colors[i];
+          scope.draw();
+        });
+
+        let colorIcon = document.createElement("span");
+        colorIcon.classList.add("colorIcon");
+        colorIcon.style.backgroundColor = scope.settings.colors[i];
+        colorButton.appendChild(colorIcon);
+
+        settings.appendChild(colorButton);
+      }
+
+      for (let i in scope.settings.widths) {
+        let widthButton = document.createElement("button");
+        if (scope.settings.widths[i] == scope.settings.activeWidth) {
+          widthButton.classList.add("active");
+        }
+
+        widthButton.addEventListener("click", (e) => {
+          scope.settings.activeWidth = scope.settings.widths[i];
+          scope.draw();
+        });
+
+        let widthIcon = document.createElement("span");
+        widthIcon.classList.add("widthIcon");
+        widthIcon.style.width = scope.settings.widths[i] + "px";
+        widthIcon.style.height = scope.settings.widths[i] + "px";
+        widthButton.appendChild(widthIcon);
+
+        settings.appendChild(widthButton);
+      }
+
+      return settings;
     }
-    drawTool.addEventListener("click", (e) => {
-      this.tools.move.active = false;
-      this.tools.draw.active = true;
-      this.draw();
-    });
-    toolbox.appendChild(drawTool);
 
-    let settings = document.createElement("div");
-    settings.classList.add("image-editor_settings");
+    function drawUtil() {
+      let util = document.createElement("div");
+      util.classList.add("image-editor_util");
 
-    let changeZoomMode = document.createElement("button");
-    changeZoomMode.innerText = "zoom";
-    changeZoomMode.addEventListener("click", (e) => {
-      this.canvas.setBgFullSize();
-    });
-    settings.appendChild(changeZoomMode);
+      let changeZoomMode = document.createElement("button");
+      changeZoomMode.addEventListener("click", (e) => {
+        scope.canvas.setBgFullSize();
+      });
+      changeZoomMode.appendChild(icons.full);
+      util.appendChild(changeZoomMode);
 
-    this.container.appendChild(settings);
-    this.container.appendChild(toolbox);
+      return util;
+    }
   }
 
   async getBlob() {
-    this.canvas.el.toBlob(
+    scope.canvas.el.toBlob(
       (blob) => {
         blob.text().then((text) => {
           return text;

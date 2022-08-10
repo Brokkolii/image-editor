@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Brokkolii/image-editor#readme",
   "devDependencies": {
     "css-loader": "^6.7.1",
+    "file-loader": "^6.2.0",
     "sass-loader": "^13.0.2",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.3.1",
