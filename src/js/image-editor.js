@@ -16,6 +16,48 @@ export default class ImageEditor {
           x: 0,
           y: 0,
         },
+        actions: {
+          wheel: function (scope, e) {
+            const modifier = e.deltaY / 1000 + 1;
+            scope.canvas.view.zoom = scope.canvas.view.zoom * modifier;
+            scope.canvas.draw();
+          },
+          mousedown: function (scope, e) {
+            if (scope.canvas.coordsOnBg(e.x, e.y)) {
+              scope.tools.move.moving = true;
+              scope.canvas.el.style.cursor = "grabbing";
+              scope.tools.move.mouseDown.x = e.x;
+              scope.tools.move.mouseDown.y = e.y;
+            }
+          },
+          mouseup: function (scope, e) {
+            if (scope.tools.move.moving) {
+              scope.tools.move.moving = false;
+              scope.canvas.el.style.cursor = "auto";
+              scope.canvas.draw();
+            }
+          },
+          mousemove: function (scope, e) {
+            if (scope.tools.move.moving) {
+              if (new Date() - scope.tools.move.lastDraw >= 20) {
+                scope.tools.move.lastDraw = new Date();
+                const offsetX = e.x - scope.tools.move.mouseDown.x;
+                const offsetY = e.y - scope.tools.move.mouseDown.y;
+                scope.tools.move.mouseDown.x = e.x;
+                scope.tools.move.mouseDown.y = e.y;
+                scope.canvas.view.offset.x += offsetX;
+                scope.canvas.view.offset.y += offsetY;
+                scope.canvas.draw();
+              }
+            } else {
+              if (scope.canvas.coordsOnBg(e.x, e.y)) {
+                scope.canvas.el.style.cursor = "grab";
+              } else {
+                scope.canvas.el.style.cursor = "auto";
+              }
+            }
+          },
+        },
       },
       draw: {
         active: true,
@@ -26,6 +68,40 @@ export default class ImageEditor {
         mouseDown: {
           x: 0,
           y: 0,
+        },
+        actions: {
+          wheel: function (scope, e) {
+            const modifier = e.deltaY / 1000 + 1;
+            scope.canvas.view.zoom = scope.canvas.view.zoom * modifier;
+            scope.canvas.draw();
+          },
+          mousedown: function (scope, e) {
+            if (scope.canvas.coordsOnBg(e.x, e.y)) {
+              scope.tools.draw.moving = true;
+              scope.canvas.content.lines.push(new Line(scope.tools.draw.color, scope.tools.draw.lineWidth));
+            }
+          },
+          mouseup: function (scope, e) {
+            if (scope.tools.draw.moving) {
+              scope.tools.draw.moving = false;
+              scope.canvas.draw();
+            }
+          },
+          mousemove: function (scope, e) {
+            if (scope.tools.draw.moving) {
+              if (scope.canvas.coordsOnBg(e.x, e.y)) {
+                if (new Date() - scope.tools.draw.lastDraw >= 20) {
+                  scope.tools.draw.lastDraw = new Date();
+                  const originPos = scope.canvas.mapCoordsToOrigin(e.x - scope.canvas.x, e.y - scope.canvas.y);
+                  scope.canvas.content.lines[scope.canvas.content.lines.length - 1].addPoint(originPos.x, originPos.y);
+                  scope.canvas.draw();
+                }
+              } else {
+                scope.tools.draw.moving = false;
+                scope.canvas.draw();
+              }
+            }
+          },
         },
       },
     };
@@ -99,80 +175,31 @@ export default class ImageEditor {
   }
 
   setControls() {
+    let scope = this;
+
     this.container.addEventListener("wheel", (e) => {
-      const modifier = e.deltaY / 1000 + 1;
-      this.canvas.view.zoom = this.canvas.view.zoom * modifier;
-      this.canvas.draw();
+      handleEvent("wheel", e);
     });
 
     this.container.addEventListener("mousedown", (e) => {
-      if (this.canvas.coordsOnBg(e.x, e.y)) {
-        if (this.tools.move.active) {
-          this.tools.move.moving = true;
-          this.canvas.el.style.cursor = "grabbing";
-          this.tools.move.mouseDown.x = e.x;
-          this.tools.move.mouseDown.y = e.y;
-        }
-
-        if (this.tools.draw.active) {
-          this.tools.draw.moving = true;
-          this.canvas.content.lines.push(new Line(this.tools.draw.color, this.tools.draw.lineWidth));
-        }
-      }
+      handleEvent("mousedown", e);
     });
 
     this.container.addEventListener("mouseup", (e) => {
-      if (this.tools.move.active) {
-        if (this.tools.move.moving) {
-          this.tools.move.moving = false;
-          this.canvas.el.style.cursor = "auto";
-          this.canvas.draw();
-        }
-      }
-      if (this.tools.draw.active) {
-        if (this.tools.draw.moving) {
-          this.tools.draw.moving = false;
-          this.canvas.draw();
-        }
-      }
+      handleEvent("mouseup", e);
     });
 
     this.container.addEventListener("mousemove", (e) => {
-      if (this.tools.move.active) {
-        if (this.tools.move.moving) {
-          if (new Date() - this.tools.move.lastDraw >= 20) {
-            this.tools.move.lastDraw = new Date();
-            const offsetX = e.x - this.tools.move.mouseDown.x;
-            const offsetY = e.y - this.tools.move.mouseDown.y;
-            this.tools.move.mouseDown.x = e.x;
-            this.tools.move.mouseDown.y = e.y;
-            this.canvas.view.offset.x += offsetX;
-            this.canvas.view.offset.y += offsetY;
-            this.canvas.draw();
-          }
-        } else {
-          if (this.canvas.coordsOnBg(e.x, e.y)) {
-            this.canvas.el.style.cursor = "grab";
-          } else {
-            this.canvas.el.style.cursor = "auto";
-          }
-        }
-      }
-      if (this.tools.draw.active) {
-        if (this.tools.draw.moving) {
-          if (this.canvas.coordsOnBg(e.x, e.y)) {
-            if (new Date() - this.tools.draw.lastDraw >= 20) {
-              this.tools.draw.lastDraw = new Date();
-              const originPos = this.canvas.mapCoordsToOrigin(e.x - this.canvas.x, e.y - this.canvas.y);
-              this.canvas.content.lines[this.canvas.content.lines.length - 1].addPoint(originPos.x, originPos.y);
-              this.canvas.draw();
-            }
-          } else {
-            this.tools.draw.moving = false;
-            this.canvas.draw();
-          }
-        }
-      }
+      handleEvent("mousemove", e);
     });
+
+    function handleEvent(type, e) {
+      for (const [key, value] of Object.entries(scope.tools)) {
+        const tool = value;
+        if (tool.active) {
+          tool.actions[type](scope, e);
+        }
+      }
+    }
   }
 }
