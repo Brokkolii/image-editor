@@ -46,7 +46,7 @@ export default class ImageEditor {
       draw: {
         active: false,
         moving: false,
-        lineWidth: 5,
+        lineWidth: 2,
         color: "red",
         lastDraw: new Date(),
         mouseDown: {
@@ -56,16 +56,23 @@ export default class ImageEditor {
       },
     };
 
-    // Load Image
+    if (imgSrc) this.loadBackgroundImage(imgSrc);
+
+    this.setControls();
+
+    this.draw();
+  }
+
+  loadBackgroundImage(imgSrc) {
     this.state.background.image.src = imgSrc;
     this.state.background.x = 0 - this.state.background.image.width / 2;
     this.state.background.y = 0 - this.state.background.image.height / 2;
     this.state.background.image.style.display = "none";
     this.parentEl.appendChild(this.state.background.image);
-
-    this.draw();
-    this.setControls();
     this.setFullSize();
+    this.state.background.image.onload = () => {
+      this.draw();
+    };
   }
 
   mapCoordsToOrigin(x, y, w, h) {
@@ -96,28 +103,27 @@ export default class ImageEditor {
 
     // Paths
     for (let i in this.state.paths) {
-      for (let j in this.state.paths[i]) {
-        const point = this.state.paths[i][parseInt(j)];
-        const nextPoint = this.state.paths[i][parseInt(j) + 1];
-        if (nextPoint) {
-          this.context.strokeStyle = this.tools.draw.color;
-          this.context.lineWidth = this.tools.draw.lineWidth * this.state.zoom;
-          this.context.beginPath();
+      this.context.strokeStyle = this.tools.draw.color;
+      this.context.lineWidth = this.tools.draw.lineWidth * this.state.zoom;
+      this.context.beginPath();
 
-          const scaledPoint = this.mapCoordsToDisplay(point.x, point.y);
+      let pointIndex = 0;
+      let point = this.state.paths[i][pointIndex];
+
+      while (point) {
+        const scaledPoint = this.mapCoordsToDisplay(point.x, point.y);
+        if (pointIndex == 0) {
           this.context.moveTo(scaledPoint.x, scaledPoint.y);
-
-          const scaledNextPoint = this.mapCoordsToDisplay(nextPoint.x, nextPoint.y);
-          this.context.lineTo(scaledNextPoint.x, scaledNextPoint.y);
-          this.context.stroke();
+        } else {
+          this.context.lineTo(scaledPoint.x, scaledPoint.y);
         }
+        point = this.state.paths[i][++pointIndex];
       }
-    }
-    // Tools
-    this.drawTools();
-  }
 
-  drawTools() {
+      this.context.stroke();
+    }
+
+    // Tools
     let oldToolbox = this.parentEl.querySelector(".toolbox");
     if (oldToolbox) oldToolbox.remove();
     let oldSettings = this.parentEl.querySelector(".setting");
@@ -137,7 +143,6 @@ export default class ImageEditor {
       moveTool.style.backgroundColor = "unset";
     }
     moveTool.addEventListener("click", (e) => {
-      console.log("move");
       this.tools.move.active = true;
       this.tools.draw.active = false;
       this.draw();
@@ -152,7 +157,6 @@ export default class ImageEditor {
       drawTool.style.backgroundColor = "unset";
     }
     drawTool.addEventListener("click", (e) => {
-      console.log("draw");
       this.tools.move.active = false;
       this.tools.draw.active = true;
       this.draw();
