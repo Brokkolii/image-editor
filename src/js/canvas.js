@@ -85,11 +85,12 @@ export default class Canvas {
   }
 
   setBgFullSize() {
+    this.view.offset.x = this.w / 2;
+    this.view.offset.y = this.h / 2;
     const zoomWidth = (this.w - 20) / this.content.background.w;
     const zoomHeight = (this.h - 20) / this.content.background.h;
     this.view.zoom = Math.min(zoomHeight, zoomWidth);
-    this.view.offset.x = this.w / 2;
-    this.view.offset.y = this.h / 2;
+    this.draw();
   }
 
   coordsOnBg(x, y) {

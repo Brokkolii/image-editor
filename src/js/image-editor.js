@@ -154,7 +154,6 @@ export default class ImageEditor {
     changeZoomMode.innerText = "zoom";
     changeZoomMode.addEventListener("click", (e) => {
       this.canvas.setBgFullSize();
-      this.draw();
     });
     settings.appendChild(changeZoomMode);
 
