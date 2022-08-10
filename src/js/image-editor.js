@@ -23,7 +23,7 @@ export default class ImageEditor {
       zoom: 1,
       offset: {
         x: this.canvas.width / 2,
-        y: this.canvas.height / 2,
+        y: this.canvas.hieght / 2,
       },
       paths: [],
       background: {
@@ -32,13 +32,6 @@ export default class ImageEditor {
         y: 0,
       },
     };
-
-    // Load Image
-    this.state.background.image.src = imgSrc;
-    this.state.background.x = this.canvas.width / 2 - this.state.background.image.width / 2;
-    this.state.background.y = this.canvas.height / 2 - this.state.background.image.height / 2;
-    this.state.background.image.style.display = "none";
-    this.parentEl.appendChild(this.state.background.image);
 
     this.tools = {
       move: {
@@ -63,15 +56,33 @@ export default class ImageEditor {
       },
     };
 
+    // Load Image
+    this.state.background.image.src = imgSrc;
+    this.state.background.x = 0 - this.state.background.image.width / 2;
+    this.state.background.y = 0 - this.state.background.image.height / 2;
+    this.state.background.image.style.display = "none";
+    this.parentEl.appendChild(this.state.background.image);
+
     this.draw();
     this.setControls();
     this.setFullSize();
   }
 
-  translateCoordinates(x, y) {
+  mapCoordsToOrigin(x, y, w, h) {
+    return {
+      x: (x - this.state.offset.x) / this.state.zoom,
+      y: (y - this.state.offset.y) / this.state.zoom,
+      w: w / this.state.zoom,
+      h: h / this.state.zoom,
+    };
+  }
+
+  mapCoordsToDisplay(x, y, w, h) {
     return {
       x: x * this.state.zoom + this.state.offset.x,
       y: y * this.state.zoom + this.state.offset.y,
+      w: w * this.state.zoom,
+      h: h * this.state.zoom,
     };
   }
 
@@ -79,13 +90,9 @@ export default class ImageEditor {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     //  Image
-    const width = this.state.background.image.width * this.state.zoom;
-    const height = this.state.background.image.height * this.state.zoom;
-
-    const left = this.state.offset.x;
-    const top = this.state.offset.y;
-
-    this.context.drawImage(this.state.background.image, left, top, width, height);
+    const bg = this.state.background;
+    const displayPos = this.mapCoordsToDisplay(bg.x, bg.y, bg.image.width, bg.image.height);
+    this.context.drawImage(bg.image, displayPos.x, displayPos.y, displayPos.w, displayPos.h);
 
     // Paths
     for (let i in this.state.paths) {
@@ -97,10 +104,10 @@ export default class ImageEditor {
           this.context.lineWidth = this.tools.draw.lineWidth;
           this.context.beginPath();
 
-          const scaledPoint = this.translateCoordinates(point.x, point.y);
+          const scaledPoint = this.mapCoordsToDisplay(point.x, point.y);
           this.context.moveTo(scaledPoint.x, scaledPoint.y);
 
-          const scaledNextPoint = this.translateCoordinates(nextPoint.x, nextPoint.y);
+          const scaledNextPoint = this.mapCoordsToDisplay(nextPoint.x, nextPoint.y);
           this.context.lineTo(scaledNextPoint.x, scaledNextPoint.y);
           this.context.stroke();
         }
@@ -179,24 +186,24 @@ export default class ImageEditor {
     const zoomHeight = (this.canvas.height - 20) / this.state.background.image.height;
     const zoomWidth = (this.canvas.width - 20) / this.state.background.image.width;
     this.state.zoom = Math.min(zoomHeight, zoomWidth);
-    this.state.offset.x = 0;
-    this.state.offset.y = 0;
+    this.state.offset.x = this.canvas.width / 2;
+    this.state.offset.y = this.canvas.height / 2;
     this.draw();
   }
 
   setNormalSize() {
     this.state.zoom = 1;
-    this.state.offset.x = 0;
-    this.state.offset.y = 0;
+    this.state.offset.x = this.canvas.width / 2;
+    this.state.offset.y = this.canvas.height / 2;
     this.draw();
   }
 
-  coordsOnImage(x, y) {
+  coordsOnBackground(x, y) {
     return (
-      x >= this.state.offset.x + this.canvas.width / 2 - (this.state.background.image.width * this.state.zoom) / 2 &&
-      x <= this.state.offset.x + this.canvas.width / 2 + (this.state.background.image.width * this.state.zoom) / 2 &&
-      y >= this.state.offset.y + this.canvas.height / 2 - (this.state.background.image.width * this.state.zoom) / 2 &&
-      y <= this.state.offset.y + this.canvas.height / 2 + (this.state.background.image.width * this.state.zoom) / 2
+      x >= this.state.offset.x - (this.state.background.image.width * this.state.zoom) / 2 &&
+      x <= this.state.offset.x + (this.state.background.image.width * this.state.zoom) / 2 &&
+      y >= this.state.offset.y - (this.state.background.image.width * this.state.zoom) / 2 &&
+      y <= this.state.offset.y + (this.state.background.image.width * this.state.zoom) / 2
     );
   }
 
@@ -221,7 +228,7 @@ export default class ImageEditor {
     });
 
     this.parentEl.addEventListener("mousedown", (e) => {
-      if (this.coordsOnImage(e.x, e.y)) {
+      if (this.coordsOnBackground(e.x, e.y)) {
         if (this.tools.move.active) {
           this.tools.move.moving = true;
           this.canvas.style.cursor = "grabbing";
@@ -267,7 +274,7 @@ export default class ImageEditor {
             this.draw();
           }
         } else {
-          if (this.coordsOnImage(e.x, e.y)) {
+          if (this.coordsOnBackground(e.x, e.y)) {
             this.canvas.style.cursor = "grab";
           } else {
             this.canvas.style.cursor = "auto";
@@ -276,12 +283,12 @@ export default class ImageEditor {
       }
       if (this.tools.draw.active) {
         if (this.tools.draw.moving) {
-          if (this.coordsOnImage(e.x, e.y)) {
+          if (this.coordsOnBackground(e.x, e.y)) {
             if (new Date() - this.tools.draw.lastDraw >= 20) {
               this.tools.draw.lastDraw = new Date();
-              const x = (e.x - this.left - this.state.offset.x) / this.state.zoom;
-              const y = (e.y - this.top - this.state.offset.y) / this.state.zoom;
-              this.state.paths[this.state.paths.length - 1].push({ x: x, y: y });
+
+              const originPos = this.mapCoordsToOrigin(e.x - this.left, e.y - this.top);
+              this.state.paths[this.state.paths.length - 1].push({ x: originPos.x, y: originPos.y });
               this.draw();
             }
           } else {
