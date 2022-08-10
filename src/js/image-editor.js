@@ -101,7 +101,7 @@ export default class ImageEditor {
         const nextPoint = this.state.paths[i][parseInt(j) + 1];
         if (nextPoint) {
           this.context.strokeStyle = this.tools.draw.color;
-          this.context.lineWidth = this.tools.draw.lineWidth;
+          this.context.lineWidth = this.tools.draw.lineWidth * this.state.zoom;
           this.context.beginPath();
 
           const scaledPoint = this.mapCoordsToDisplay(point.x, point.y);
