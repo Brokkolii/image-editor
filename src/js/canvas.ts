@@ -1,4 +1,6 @@
 import Line from "./line";
+import Rect from "./rect";
+import Background from "./background";
 
 export default class Canvas {
   el: HTMLCanvasElement;
@@ -7,16 +9,8 @@ export default class Canvas {
   y: number;
   w: number;
   h: number;
-  content: {
-    lines: Line[];
-    background: {
-      image: HTMLImageElement;
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    };
-  };
+  content: any[];
+  background: Background;
   view: {
     zoom: number;
     offset: {
@@ -44,6 +38,8 @@ export default class Canvas {
     this.h = canvasPos.height;
     // TODO: set on window resize
 
+    this.content = [];
+
     this.view = {
       zoom: 1,
       offset: {
@@ -56,54 +52,19 @@ export default class Canvas {
   draw() {
     this.ctx.clearRect(0, 0, this.w, this.h);
 
-    //  Image
-    const bg = this.content.background;
-    const displayPos = this.mapCoordsToDisplay(bg.x, bg.y, bg.w, bg.h);
-    this.ctx.drawImage(bg.image, displayPos.x, displayPos.y, displayPos.w, displayPos.h);
+    this.background.draw(this);
 
-    // Lines
-    for (let i in this.content.lines) {
-      const line = this.content.lines[i];
-
-      this.ctx.strokeStyle = line.color;
-      this.ctx.lineWidth = line.width * this.view.zoom;
-      this.ctx.beginPath();
-
-      let pointIndex = 0;
-      let point = line.path[pointIndex];
-
-      while (point) {
-        const scaledPoint = this.mapCoordsToDisplay(point.x, point.y);
-        if (pointIndex == 0) {
-          this.ctx.moveTo(scaledPoint.x, scaledPoint.y);
-        } else {
-          this.ctx.lineTo(scaledPoint.x, scaledPoint.y);
-        }
-        point = line.path[++pointIndex];
-      }
-
-      this.ctx.stroke();
+    for (let i in this.content) {
+      this.content[i].draw(this);
     }
   }
 
   loadBgImage(imgSrc: string) {
-    const image = new Image();
-    image.src = imgSrc;
-
-    this.content = {
-      lines: [],
-      background: {
-        image: image,
-        w: image.width,
-        h: image.height,
-        x: 0 - image.width / 2,
-        y: 0 - image.height / 2,
-      },
-    };
+    this.background = new Background(imgSrc);
 
     this.setBgFullSize();
 
-    image.onload = () => {
+    this.background.image.onload = () => {
       this.draw();
     };
   }
@@ -111,19 +72,14 @@ export default class Canvas {
   setBgFullSize() {
     this.view.offset.x = this.w / 2;
     this.view.offset.y = this.h / 2;
-    const zoomWidth = (this.w - 20) / this.content.background.w;
-    const zoomHeight = (this.h - 20) / this.content.background.h;
+    const zoomWidth = (this.w - 20) / this.background.w;
+    const zoomHeight = (this.h - 20) / this.background.h;
     this.view.zoom = Math.min(zoomHeight, zoomWidth);
     this.draw();
   }
 
   coordsOnBg(x: number, y: number) {
-    return (
-      x >= this.view.offset.x - (this.content.background.w * this.view.zoom) / 2 &&
-      x <= this.view.offset.x + (this.content.background.w * this.view.zoom) / 2 &&
-      y >= this.view.offset.y - (this.content.background.h * this.view.zoom) / 2 &&
-      y <= this.view.offset.y + (this.content.background.h * this.view.zoom) / 2
-    );
+    return x >= this.view.offset.x - (this.background.w * this.view.zoom) / 2 && x <= this.view.offset.x + (this.background.w * this.view.zoom) / 2 && y >= this.view.offset.y - (this.background.h * this.view.zoom) / 2 && y <= this.view.offset.y + (this.background.h * this.view.zoom) / 2;
   }
 
   mapCoordsToOrigin(x: number, y: number, w?: number, h?: number) {

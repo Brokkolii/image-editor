@@ -1,6 +1,7 @@
 import Canvas from "./canvas";
 import DrawTool from "./drawTool";
 import MoveTool from "./moveTool";
+import RectTool from "./rectTool";
 import icons from "./icons";
 
 export default class ImageEditor {
@@ -9,6 +10,7 @@ export default class ImageEditor {
   tools: {
     move: MoveTool;
     draw: DrawTool;
+    rect: RectTool;
   };
 
   settings: {
@@ -25,6 +27,7 @@ export default class ImageEditor {
     this.tools = {
       move: new MoveTool(false),
       draw: new DrawTool(true),
+      rect: new RectTool(false),
     };
 
     this.settings = {
