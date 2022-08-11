@@ -1,5 +1,31 @@
+import Line from "./line";
+
 export default class Canvas {
-  constructor(container) {
+  el: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  content: {
+    lines: Line[];
+    background: {
+      image: HTMLImageElement;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    };
+  };
+  view: {
+    zoom: number;
+    offset: {
+      x: number;
+      y: number;
+    };
+  };
+
+  constructor(private container: HTMLElement) {
     this.el = document.createElement("canvas");
     this.el.classList.add("image-editor_canvas");
 
@@ -18,24 +44,9 @@ export default class Canvas {
     this.h = canvasPos.height;
     // TODO: set on window resize
 
-    this.content = {
-      lines: [],
-      background: {
-        image: new Image(),
-        x: 0,
-        y: 0,
-        w: 0,
-        h: 0,
-      },
-    };
-
-    this.view = {
-      zoom: 1,
-      offset: {
-        x: this.w / 2,
-        y: this.h / 2,
-      },
-    };
+    this.view.zoom = 1;
+    this.view.offset.x = this.w / 2;
+    this.view.offset.y = this.h / 2;
   }
 
   draw() {
@@ -71,8 +82,9 @@ export default class Canvas {
     }
   }
 
-  loadBgImage(imgSrc) {
+  loadBgImage(imgSrc: string) {
     let bg = this.content.background;
+    bg.image = new Image();
     bg.image.src = imgSrc;
     bg.w = bg.image.width;
     bg.h = bg.image.height;
@@ -93,7 +105,7 @@ export default class Canvas {
     this.draw();
   }
 
-  coordsOnBg(x, y) {
+  coordsOnBg(x: number, y: number) {
     return (
       x >= this.view.offset.x - (this.content.background.w * this.view.zoom) / 2 &&
       x <= this.view.offset.x + (this.content.background.w * this.view.zoom) / 2 &&
@@ -102,7 +114,7 @@ export default class Canvas {
     );
   }
 
-  mapCoordsToOrigin(x, y, w, h) {
+  mapCoordsToOrigin(x: number, y: number, w?: number, h?: number) {
     return {
       x: (x - this.view.offset.x) / this.view.zoom,
       y: (y - this.view.offset.y) / this.view.zoom,
@@ -111,7 +123,7 @@ export default class Canvas {
     };
   }
 
-  mapCoordsToDisplay(x, y, w, h) {
+  mapCoordsToDisplay(x: number, y: number, w?: number, h?: number) {
     return {
       x: x * this.view.zoom + this.view.offset.x,
       y: y * this.view.zoom + this.view.offset.y,
