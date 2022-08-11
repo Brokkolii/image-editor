@@ -1,5 +1,31 @@
+import Line from "./line";
+
 export default class Canvas {
-  constructor(container) {
+  el: HTMLCanvasElement;
+  ctx: CanvasRenderingContext2D;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  content: {
+    lines: Line[];
+    background: {
+      image: HTMLImageElement;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+    };
+  };
+  view: {
+    zoom: number;
+    offset: {
+      x: number;
+      y: number;
+    };
+  };
+
+  constructor(private container: HTMLElement) {
     this.el = document.createElement("canvas");
     this.el.classList.add("image-editor_canvas");
 
@@ -17,17 +43,6 @@ export default class Canvas {
     this.w = canvasPos.width;
     this.h = canvasPos.height;
     // TODO: set on window resize
-
-    this.content = {
-      lines: [],
-      background: {
-        image: new Image(),
-        x: 0,
-        y: 0,
-        w: 0,
-        h: 0,
-      },
-    };
 
     this.view = {
       zoom: 1,
@@ -71,15 +86,24 @@ export default class Canvas {
     }
   }
 
-  loadBgImage(imgSrc) {
-    let bg = this.content.background;
-    bg.image.src = imgSrc;
-    bg.w = bg.image.width;
-    bg.h = bg.image.height;
-    bg.x = 0 - bg.w / 2;
-    bg.y = 0 - bg.h / 2;
+  loadBgImage(imgSrc: string) {
+    const image = new Image();
+    image.src = imgSrc;
+
+    this.content = {
+      lines: [],
+      background: {
+        image: image,
+        w: image.width,
+        h: image.height,
+        x: 0 - image.width / 2,
+        y: 0 - image.height / 2,
+      },
+    };
+
     this.setBgFullSize();
-    bg.image.onload = () => {
+
+    image.onload = () => {
       this.draw();
     };
   }
@@ -93,7 +117,7 @@ export default class Canvas {
     this.draw();
   }
 
-  coordsOnBg(x, y) {
+  coordsOnBg(x: number, y: number) {
     return (
       x >= this.view.offset.x - (this.content.background.w * this.view.zoom) / 2 &&
       x <= this.view.offset.x + (this.content.background.w * this.view.zoom) / 2 &&
@@ -102,7 +126,7 @@ export default class Canvas {
     );
   }
 
-  mapCoordsToOrigin(x, y, w, h) {
+  mapCoordsToOrigin(x: number, y: number, w?: number, h?: number) {
     return {
       x: (x - this.view.offset.x) / this.view.zoom,
       y: (y - this.view.offset.y) / this.view.zoom,
@@ -111,7 +135,7 @@ export default class Canvas {
     };
   }
 
-  mapCoordsToDisplay(x, y, w, h) {
+  mapCoordsToDisplay(x: number, y: number, w?: number, h?: number) {
     return {
       x: x * this.view.zoom + this.view.offset.x,
       y: y * this.view.zoom + this.view.offset.y,

@@ -21,9 +21,7 @@ const iconStrings = [
 ];
 
 const parser = new DOMParser();
-const icons = {
-  draw: null,
-};
+const icons: any = {};
 
 for (let i in iconStrings) {
   const icon = parser.parseFromString(iconStrings[i].string, "application/xml").documentElement;
