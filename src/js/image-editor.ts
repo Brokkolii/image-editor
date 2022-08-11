@@ -108,7 +108,7 @@ export default class ImageEditor {
     widths: number[];
   };
 
-  constructor(private container: HTMLElement, imgSrc?: string) {
+  constructor(private container: HTMLElement, imgSrc: string) {
     this.scope = this;
     this.canvas = new Canvas(this.container);
 
@@ -119,7 +119,7 @@ export default class ImageEditor {
       widths: [2, 4, 8, 16],
     };
 
-    if (imgSrc) this.canvas.loadBgImage(imgSrc);
+    this.canvas.loadBgImage(imgSrc);
 
     this.setControls();
     this.draw();

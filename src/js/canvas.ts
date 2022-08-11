@@ -44,9 +44,13 @@ export default class Canvas {
     this.h = canvasPos.height;
     // TODO: set on window resize
 
-    this.view.zoom = 1;
-    this.view.offset.x = this.w / 2;
-    this.view.offset.y = this.h / 2;
+    this.view = {
+      zoom: 1,
+      offset: {
+        x: this.w / 2,
+        y: this.h / 2,
+      },
+    };
   }
 
   draw() {
@@ -83,15 +87,23 @@ export default class Canvas {
   }
 
   loadBgImage(imgSrc: string) {
-    let bg = this.content.background;
-    bg.image = new Image();
-    bg.image.src = imgSrc;
-    bg.w = bg.image.width;
-    bg.h = bg.image.height;
-    bg.x = 0 - bg.w / 2;
-    bg.y = 0 - bg.h / 2;
+    const image = new Image();
+    image.src = imgSrc;
+
+    this.content = {
+      lines: [],
+      background: {
+        image: image,
+        w: image.width,
+        h: image.height,
+        x: 0 - image.width / 2,
+        y: 0 - image.height / 2,
+      },
+    };
+
     this.setBgFullSize();
-    bg.image.onload = () => {
+
+    image.onload = () => {
       this.draw();
     };
   }
