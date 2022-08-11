@@ -28,15 +28,7 @@ export default class Canvas {
 
     this.ctx = this.el.getContext("2d");
 
-    const canvasPos = this.el.getBoundingClientRect();
-    this.el.height = canvasPos.height;
-    this.el.width = canvasPos.width;
-
-    this.x = canvasPos.left;
-    this.y = canvasPos.top;
-    this.w = canvasPos.width;
-    this.h = canvasPos.height;
-    // TODO: set on window resize
+    this.setCanvasSize();
 
     this.content = [];
 
@@ -47,6 +39,17 @@ export default class Canvas {
         y: this.h / 2,
       },
     };
+  }
+
+  setCanvasSize() {
+    const canvasPos = this.el.getBoundingClientRect();
+    this.el.height = canvasPos.height;
+    this.el.width = canvasPos.width;
+
+    this.x = canvasPos.left;
+    this.y = canvasPos.top;
+    this.w = canvasPos.width;
+    this.h = canvasPos.height;
   }
 
   draw() {

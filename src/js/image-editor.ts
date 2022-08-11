@@ -154,6 +154,10 @@ export default class ImageEditor {
   setControls() {
     let scope = this;
 
+    window.addEventListener("resize", () => {
+      scope.canvas.setCanvasSize();
+    });
+
     this.container.addEventListener("wheel", (e) => {
       handleEvent("wheel", e);
     });
