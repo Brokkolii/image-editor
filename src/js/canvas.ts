@@ -60,6 +60,13 @@ export default class Canvas {
     for (let i in this.content) {
       this.content[i].draw(this);
     }
+
+    const b = this.mapCoordsToDisplay(this.background.x, this.background.y, this.background.w, this.background.h);
+    // Clear around the background
+    this.ctx.clearRect(b.x - b.w, b.y - b.h, b.w * 3, b.h);
+    this.ctx.clearRect(b.x - b.w, b.y, b.w, b.h);
+    this.ctx.clearRect(b.x + b.w, b.y - b.h, b.w, b.h);
+    this.ctx.clearRect(b.x - b.w, b.y + b.h, b.w * 3, b.h);
   }
 
   loadBgImage(imgSrc: string) {
