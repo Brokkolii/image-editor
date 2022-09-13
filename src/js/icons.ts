@@ -18,6 +18,11 @@ const iconStrings = [
     name: "rect",
     string: '<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="-2 -4 24 24" preserveAspectRatio="xMinYMin"><path d="M3 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H3zm0-2h14a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H3a3 3 0 0 1-3-3V3a3 3 0 0 1 3-3z"/></svg>',
   },
+  {
+    name: "circ",
+    string:
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 29.107 29.107" style="enable-background:new 0 0 29.107 29.107;" xml:space="preserve"><g><g id="c149_moon"><path id="_x3C_Compound_Path_x3E__7_" d="M14.558,2.079c6.877,0,12.471,5.597,12.471,12.473c0,6.877-5.594,12.476-12.471,12.476    c-6.879,0-12.478-5.599-12.478-12.476C2.08,7.676,7.679,2.079,14.558,2.079 M14.558,0C6.563,0,0,6.562,0,14.552    c0,7.995,6.563,14.555,14.558,14.555s14.549-6.56,14.549-14.555C29.106,6.562,22.552,0,14.558,0L14.558,0z"/></g><g id="Capa_1_226_"></g></g></svg>',
+  },
 ];
 
 const parser = new DOMParser();
