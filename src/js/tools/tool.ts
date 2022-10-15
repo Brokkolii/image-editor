@@ -1,4 +1,4 @@
-import ImageEditor from "./image-editor";
+import ImageEditor from "../image-editor";
 
 export default class Tool {
   current: boolean;

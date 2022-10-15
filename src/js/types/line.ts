@@ -1,4 +1,4 @@
-import Canvas from "./canvas";
+import Canvas from "../canvas";
 
 export default class Line {
   constructor(public color: string = "black", public width: number = 4, public path: { x: number; y: number }[] = []) {}

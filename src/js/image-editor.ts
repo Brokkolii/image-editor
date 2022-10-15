@@ -1,9 +1,9 @@
 import Canvas from "./canvas";
-import DrawTool from "./drawTool";
-import MoveTool from "./moveTool";
-import RectTool from "./rectTool";
-import CircTool from "./circTool";
-import icons from "./icons";
+import DrawTool from "./tools/drawTool";
+import MoveTool from "./tools/moveTool";
+import RectTool from "./tools/rectTool";
+import CircTool from "./tools/circTool";
+import icons from "./util/icons";
 
 export default class ImageEditor {
   scope: ImageEditor;

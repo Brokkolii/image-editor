@@ -1,4 +1,4 @@
-import Canvas from "./canvas";
+import Canvas from "../canvas";
 
 export default class Rect {
   constructor(public color: string = "black", public width: number = 4, public x: number, public y: number, public w: number, public h: number) {}

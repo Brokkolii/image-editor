@@ -1,6 +1,6 @@
 import Tool from "./tool";
-import ImageEditor from "./image-editor";
-import icons from "./icons";
+import ImageEditor from "../image-editor";
+import icons from "../util/icons";
 
 export default class MoveTool extends Tool {
   constructor(current: boolean) {

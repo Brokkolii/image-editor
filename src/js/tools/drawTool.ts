@@ -1,12 +1,12 @@
 import Tool from "./tool";
-import Circ from "./circ";
-import ImageEditor from "./image-editor";
-import icons from "./icons";
+import ImageEditor from "../image-editor";
+import Line from "../types/line";
+import icons from "../util/icons";
 
-export default class RectTool extends Tool {
+export default class DrawTool extends Tool {
   constructor(current: boolean) {
     super(current);
-    this.icon = icons.circ;
+    this.icon = icons.draw;
   }
 
   wheel(scope: ImageEditor, e: WheelEvent) {
@@ -14,28 +14,27 @@ export default class RectTool extends Tool {
     scope.canvas.view.zoom = scope.canvas.view.zoom * modifier;
     scope.canvas.draw();
   }
+
   mousedown(scope: ImageEditor, e: MouseEvent) {
     if (scope.canvas.coordsOnBg(e.x - scope.canvas.x, e.y - scope.canvas.y)) {
       scope.canvas.addHistory();
       this.active = true;
-      const pos = scope.canvas.mapCoordsToOrigin(e.x - scope.canvas.x, e.y - scope.canvas.y);
-      this.lastUpdate.pos.x = pos.x;
-      this.lastUpdate.pos.y = pos.y;
-
-      scope.canvas.content.push(new Circ(scope.settings.activeColor, scope.settings.activeWidth, pos.x, pos.y, 0)); //TODO: Make function of canvas
+      scope.canvas.content.push(new Line(scope.settings.activeColor, scope.settings.activeWidth)); //TODO: Make function of canvas
     }
   }
+
   mouseup(scope: ImageEditor, e: MouseEvent) {
     this.active = false;
     scope.canvas.draw();
   }
+
   mousemove(scope: ImageEditor, e: MouseEvent) {
     if (this.active) {
       if (scope.canvas.coordsOnBg(e.x - scope.canvas.x, e.y - scope.canvas.y)) {
         if (new Date().getTime() - this.lastUpdate.time.getTime() >= 20) {
           this.lastUpdate.time = new Date();
           const originPos = scope.canvas.mapCoordsToOrigin(e.x - scope.canvas.x, e.y - scope.canvas.y);
-          scope.canvas.content[scope.canvas.content.length - 1].updateCirc(originPos.x, originPos.y);
+          scope.canvas.content[scope.canvas.content.length - 1].addPoint(originPos.x, originPos.y);
           scope.canvas.draw();
         }
       } else {

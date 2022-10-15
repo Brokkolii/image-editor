@@ -1,7 +1,7 @@
 import Tool from "./tool";
-import Rect from "./rect";
-import ImageEditor from "./image-editor";
-import icons from "./icons";
+import Rect from "../types/rect";
+import ImageEditor from "../image-editor";
+import icons from "../util/icons";
 
 export default class RectTool extends Tool {
   constructor(current: boolean) {

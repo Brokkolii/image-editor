@@ -1,4 +1,4 @@
-import Canvas from "./canvas";
+import Canvas from "../canvas";
 
 export default class Background {
   image: HTMLImageElement;

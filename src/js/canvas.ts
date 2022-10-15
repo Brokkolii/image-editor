@@ -1,6 +1,6 @@
-import Line from "./line";
-import Rect from "./rect";
-import Background from "./background";
+import Line from "./types/line";
+import Rect from "./types/rect";
+import Background from "./types/background";
 const _ = require("lodash");
 
 export default class Canvas {
