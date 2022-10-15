@@ -16,6 +16,7 @@ export default class RectTool extends Tool {
   }
   mousedown(scope: ImageEditor, e: MouseEvent) {
     if (scope.canvas.coordsOnBg(e.x - scope.canvas.x, e.y - scope.canvas.y)) {
+      scope.canvas.addHistory();
       this.active = true;
       const pos = scope.canvas.mapCoordsToOrigin(e.x - scope.canvas.x, e.y - scope.canvas.y);
       this.lastUpdate.pos.x = pos.x;

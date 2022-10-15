@@ -17,6 +17,7 @@ export default class DrawTool extends Tool {
 
   mousedown(scope: ImageEditor, e: MouseEvent) {
     if (scope.canvas.coordsOnBg(e.x - scope.canvas.x, e.y - scope.canvas.y)) {
+      scope.canvas.addHistory();
       this.active = true;
       scope.canvas.content.push(new Line(scope.settings.activeColor, scope.settings.activeWidth)); //TODO: Make function of canvas
     }

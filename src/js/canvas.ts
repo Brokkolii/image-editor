@@ -1,6 +1,7 @@
 import Line from "./line";
 import Rect from "./rect";
 import Background from "./background";
+const _ = require("lodash");
 
 export default class Canvas {
   el: HTMLCanvasElement;
@@ -10,6 +11,7 @@ export default class Canvas {
   w: number;
   h: number;
   content: any[];
+  history: any[];
   background: Background;
   view: {
     zoom: number;
@@ -31,6 +33,7 @@ export default class Canvas {
     this.setCanvasSize();
 
     this.content = [];
+    this.history = [];
 
     this.view = {
       zoom: 1,
@@ -57,11 +60,12 @@ export default class Canvas {
 
     this.background.draw(this);
 
-    for (let i in this.content) {
-      this.content[i].draw(this);
-    }
+    this.content.forEach((el) => {
+      el.draw(this);
+    });
 
     const b = this.mapCoordsToDisplay(this.background.x, this.background.y, this.background.w, this.background.h);
+
     // Clear around the background
     this.ctx.clearRect(b.x - b.w, b.y - b.h, b.w * 3, b.h);
     this.ctx.clearRect(b.x - b.w, b.y, b.w, b.h);
@@ -108,5 +112,16 @@ export default class Canvas {
       w: w * this.view.zoom,
       h: h * this.view.zoom,
     };
+  }
+
+  addHistory() {
+    const content = _.cloneDeep(this.content);
+    this.history.push(content);
+  }
+
+  undo() {
+    const lastHistory = _.cloneDeep(this.history.pop());
+    this.content = lastHistory;
+    this.draw();
   }
 }

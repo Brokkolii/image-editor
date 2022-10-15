@@ -138,6 +138,13 @@ export default class ImageEditor {
       changeZoomMode.appendChild(icons.full);
       util.appendChild(changeZoomMode);
 
+      let undo = document.createElement("button");
+      undo.addEventListener("click", (e) => {
+        scope.canvas.undo();
+      });
+      undo.appendChild(icons.undo);
+      util.appendChild(undo);
+
       return util;
     }
   }
