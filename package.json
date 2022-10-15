@@ -30,6 +30,7 @@
     "webpack-dev-server": "^4.9.3"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "node-sass": "^7.0.1"
   }
 }
